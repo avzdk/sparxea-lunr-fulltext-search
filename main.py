@@ -83,7 +83,7 @@ function handleSearchInput(el, currentPageId) {
     const docMeta = window.docDictionary[docId];
     const docTitle = docMeta ? docMeta.title : docId;
     const link = buildRelativeLink(currentPageId, docId);
-    output += `<div><a href="${link}" target="_blank">${docTitle}</a></div>`;
+    output += `<div><a href="${link}" target="_self">${docTitle}</a></div>`;
   });
   document.getElementById('lunrSearchResults').innerHTML = output;
 }
