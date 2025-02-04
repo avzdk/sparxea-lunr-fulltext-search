@@ -52,76 +52,46 @@ def write_search_index_js(docs):
         f.write("  docDictionary[d.id] = { title: d.title };\n")
         f.write("});\n\n")
         f.write("""(function(){
-  window.idx = lunr(function () {
-    this.ref('id');
-    this.field('text');
-    documents.forEach(doc => this.add(doc), this);
-  });
-})();
-""")
+            window.idx = lunr(function () {
+                this.ref('id');
+                this.field('text');
+                documents.forEach(doc => this.add(doc), this);
+            });
+            })();
+        """)
 
 def write_search_logic_js():
+    BASE_URL = "/SparxEA_HTML_Export/"  # or wherever your server serves these files
+
     with open(LOGIC_JS_PATH, "w", encoding="utf-8") as f:
-        f.write("""function doLunrSearch(query) {
+        f.write(f"""function doLunrSearch(query) {{
   if (!window.idx) return [];
   return window.idx.search(query);
-}
+}}
 
-// currentPageId should be passed in from each page, indicating its relative path
-function handleSearchInput(el, currentPageId) {
+function handleSearchInput(el) {{
   const query = el.value.trim();
-  if (!query) {
-    // If the search field is empty, display nothing (or whatever you like).
+  if (!query) {{
     document.getElementById('lunrSearchResults').innerHTML = "";
     return;
-  }
-
+  }}
   const results = doLunrSearch(query);
   let output = "";
-  results.forEach(r => {
-    const docId = r.ref;
+  results.forEach(r => {{
+    const docId = r.ref;  // e.g. "EARoot/EA19/EA254.htm"
     const docMeta = window.docDictionary[docId];
     const docTitle = docMeta ? docMeta.title : docId;
-    const link = buildRelativeLink(currentPageId, docId);
-    output += `<div><a href="${link}" target="_self">${docTitle}</a></div>`;
-  });
+    // Build a link from the server root
+    const link = "{BASE_URL}" + docId;
+    output += `<div><a href="${{link}}" target="_self">${{docTitle}}</a></div>`;
+  }});
   document.getElementById('lunrSearchResults').innerHTML = output;
-}
-
-// Reconstruct a relative link so that we don't duplicate subfolders
-function buildRelativeLink(fromId, toId) {
-  if (!fromId || !toId) return toId;
-  const fromParts = fromId.split('/');
-  fromParts.pop(); // remove current file name
-  const toParts = toId.split('/');
-  // Remove any empty parts
-  const fromStack = [];
-  fromParts.forEach(p => { if(p) fromStack.push(p); });
-  const toStack = [];
-  toParts.forEach(p => { if(p) toStack.push(p); });
-
-  // find common prefix
-  let i = 0;
-  while (i < fromStack.length && i < toStack.length && fromStack[i] === toStack[i]) {
-    i++;
-  }
-  // how many folders to go up from "from"
-  const ups = fromStack.length - i;
-  let relative = "";
-  for (let j = 0; j < ups; j++) {
-    relative += "../";
-  }
-  // then down into the "to" remainder
-  const downs = toStack.slice(i).join("/");
-  relative += downs;
-  return relative;
-}
+}}
 """)
 
 def inject_search_bar():
     """
-    Injects the search bar + scripts into all *.htm, but only if 'id="lunrSearchBar"'
-    is NOT already present. This avoids duplicates on index.htm or anywhere else.
+    Injects the search bar + scripts into all *.htm, skipping duplicates.
     """
     import re
 
@@ -140,27 +110,25 @@ def inject_search_bar():
                 if 'id="lunrSearchBar"' in html:
                     continue
 
-                # Figure out how deep we are:
                 relpath = os.path.relpath(fpath, EXPORT_DIR)
                 rel_parts = relpath.split(os.sep)
                 depth = len(rel_parts) - 1
                 up_levels = "../" * depth if depth > 0 else "./"
 
+                # Insert script references
                 script_inject = f"""
   <script src="{LUNR_CDN}"></script>
   <script src="{up_levels}js/searchIndex.js"></script>
   <script src="{up_levels}js/searchLogic.js"></script>
   </head>
 """
-
-                # Insert <script> references near </head>
                 def replace_head(_match):
                     return script_inject
 
                 if head_pattern.search(html):
                     html = head_pattern.sub(replace_head, html, count=1)
                 else:
-                    # fallback to prepend if no </head>
+                    # fallback if no </head>
                     html = script_inject + html
 
                 # Insert currentPageId
@@ -169,8 +137,6 @@ def inject_search_bar():
   var currentPageId = "{relpath.replace('\\\\','/')}";
 </script>
 """
-
-                # The search bar snippet
                 search_div = f"""
 {current_page_script}
 <div id="lunrSearchBar" style="margin:10px;">
