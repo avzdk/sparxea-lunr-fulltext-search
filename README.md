@@ -75,7 +75,11 @@ This will:
 
 ## **3️⃣ Viewing the Result**
 
-Open `SparxEA_HTML_Export/index.htm` (or any `.htm` in a subfolder) in a browser:
+Run a Python server:
+```bash
+python -m http.server
+```
+Open `[SparxEA_HTML_Export/index.htm](http://localhost:8000/SparxEA_HTML_Export/)` in a browser:
 
 1. Look for the **search bar** that was inserted at the top.  
 2. Type your query to see matching results dynamically displayed.
