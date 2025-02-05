@@ -1,13 +1,20 @@
 import os
 import re
 import json
+import argparse
 from pathlib import Path
 from bs4 import BeautifulSoup
 
-EXPORT_DIR = "SparxEA_HTML_Export"
+
 IGNORED_FILES = {"index.htm", "blank.htm", "toc.htm", "EAID_9BC9448B_98C1_4215_A154_D41E80507030.htm", "EAID_808A1CDA_04E7_4d37_B12F_93F3E2023788.htm"}
 
-JS_FOLDER = os.path.join(EXPORT_DIR, "js")
+argparser = argparse.ArgumentParser(description="Injects a search bar into all HTML files in the SparxEA_HTML_Export directory.")
+argparser.add_argument("-d", "--data-dir", default="data", help="The directory containing the HTML files.")
+args = argparser.parse_args()
+DATA_DIR = args.data_dir
+print("Export directory:", DATA_DIR)
+
+JS_FOLDER = os.path.join(DATA_DIR, "js")
 os.makedirs(JS_FOLDER, exist_ok=True)
 
 INDEX_JS_PATH = os.path.join(JS_FOLDER, "searchIndex.js")
@@ -15,13 +22,15 @@ LOGIC_JS_PATH = os.path.join(JS_FOLDER, "searchLogic.js")
 
 LUNR_CDN = "https://unpkg.com/lunr/lunr.js"
 
+
+
 def gather_documents():
     docs = []
-    for root, dirs, files in os.walk(EXPORT_DIR):
+    for root, dirs, files in os.walk(DATA_DIR):
         for fname in files:
             if fname.lower().endswith(".htm") and fname not in IGNORED_FILES:
                 fpath   = os.path.join(root, fname)
-                relpath = os.path.relpath(fpath, EXPORT_DIR).replace("\\", "/")
+                relpath = os.path.relpath(fpath, DATA_DIR).replace("\\", "/")
                 with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read()
                 soup = BeautifulSoup(content, "html.parser")
@@ -98,7 +107,7 @@ def inject_search_bar():
     head_pattern = re.compile(r"</head>", flags=re.IGNORECASE)
     body_pattern = re.compile(r"<body([^>]*)>", flags=re.IGNORECASE)
 
-    for root, dirs, files in os.walk(EXPORT_DIR):
+    for root, dirs, files in os.walk(DATA_DIR):
         for fname in files:
             if fname.lower().endswith(".htm"):
                 fpath = os.path.join(root, fname)
@@ -110,7 +119,7 @@ def inject_search_bar():
                 if 'id="lunrSearchBar"' in html:
                     continue
 
-                relpath = os.path.relpath(fpath, EXPORT_DIR)
+                relpath = os.path.relpath(fpath, DATA_DIR)
                 rel_parts = relpath.split(os.sep)
                 depth = len(rel_parts) - 1
                 up_levels = "../" * depth if depth > 0 else "./"
