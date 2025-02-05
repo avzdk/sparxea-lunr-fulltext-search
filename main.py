@@ -10,9 +10,12 @@ IGNORED_FILES = {"index.htm", "blank.htm", "toc.htm", "EAID_9BC9448B_98C1_4215_A
 
 argparser = argparse.ArgumentParser(description="Injects a search bar into all HTML files in the SparxEA_HTML_Export directory.")
 argparser.add_argument("-d", "--data-dir", default="data", help="The directory containing the HTML files.")
+argparser.add_argument("-b", "--base-url", default="data", help="The directory containing the HTML files.")
 args = argparser.parse_args()
 DATA_DIR = args.data_dir
 print("Export directory:", DATA_DIR)
+BASE_URL = f"/{args.base_url}/"  # or wherever your server serves these files
+print("Baseurl:", BASE_URL)
 
 JS_FOLDER = os.path.join(DATA_DIR, "js")
 os.makedirs(JS_FOLDER, exist_ok=True)
@@ -21,7 +24,6 @@ INDEX_JS_PATH = os.path.join(JS_FOLDER, "searchIndex.js")
 LOGIC_JS_PATH = os.path.join(JS_FOLDER, "searchLogic.js")
 
 LUNR_CDN = "https://unpkg.com/lunr/lunr.js"
-
 
 
 def gather_documents():
@@ -70,7 +72,7 @@ def write_search_index_js(docs):
         """)
 
 def write_search_logic_js():
-    BASE_URL = "/SparxEA_HTML_Export/"  # or wherever your server serves these files
+    
 
     with open(LOGIC_JS_PATH, "w", encoding="utf-8") as f:
         f.write(f"""function doLunrSearch(query) {{
