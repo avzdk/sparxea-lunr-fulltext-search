@@ -9,7 +9,9 @@ A lightweight full-text search solution for **Enterprise Architect** HTML export
 
 ## **Features**
 - **Automatic Indexing**: Uses Python to walk all subfolders of `SparxEA_HTML_Export`  
-- **Full-text Search**: Powered by Lunr.js in the browser  
+- **Full-text Search**: Powered by Lunr.js in the browser
+  - **Partial Matches**: Append wildcards to search terms
+  - **Pre-built Index**: Optionally generate a serialized Lunr index to avoid the browser “blink”
 - **On-the-fly Injection**: Adds the search bar to each `.htm` so you can search from anywhere  
 - **Re-run Safe**: Skips adding a second bar if one is already present
 
